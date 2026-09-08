@@ -2,15 +2,20 @@ package com.mbzcargo.mobile
 
 import android.Manifest
 import android.annotation.SuppressLint
+import android.app.DownloadManager
+import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
+import android.os.Environment
 import android.provider.MediaStore
 import android.view.View
+import android.webkit.DownloadListener
 import android.webkit.GeolocationPermissions
 import android.webkit.PermissionRequest
+import android.webkit.URLUtil
 import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -30,13 +35,6 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
-import android.app.DownloadManager
-import android.content.Context
-import android.net.Uri
-import android.os.Environment
-import android.webkit.DownloadListener
-import android.webkit.WebView
-import android.webkit.URLUtil
 
 class MainActivity : AppCompatActivity() {
 
@@ -92,32 +90,10 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Switch from the launch (splash) theme to the normal app theme
         setTheme(R.style.Theme_MbzApp)
-    super.onCreate(savedInstanceState)
-    setContentView(R.layout.activity_main)
+        super.onCreate(savedInstanceState)
+        setContentView(R.layout.activity_main)
 
-    webView = findViewById(R.id.webView)  // ← Inisialisasi DULUAN
-    progressBar = findViewById(R.id.progressBar)
-    swipeRefresh = findViewById(R.id.swipeRefresh)
-    splashOverlay = findViewById(R.id.splashOverlay)
-
-    // ← SETUP DOWNLOAD LISTENER SETELAH WEBVIEW INIT
-    webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
-        val request = DownloadManager.Request(Uri.parse(url))
-            .setMimeType(mimeType)
-            .addRequestHeader("User-Agent", userAgent)
-            .setDescription("Downloading file...")
-            .setTitle(URLUtil.guessFileName(url, contentDisposition, mimeType))
-            .allowScanningByMediaScanner()
-            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
-            .setDestinationInExternalPublicDir(
-                Environment.DIRECTORY_DOWNLOADS,
-                URLUtil.guessFileName(url, contentDisposition, mimeType)
-            )
-        
-        val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-        dm.enqueue(request)
-    }
-        
+        // Initialize views
         webView = findViewById(R.id.webView)
         progressBar = findViewById(R.id.progressBar)
         swipeRefresh = findViewById(R.id.swipeRefresh)
@@ -125,6 +101,9 @@ class MainActivity : AppCompatActivity() {
 
         // Safety net: hide the splash after 12s even if the page never reports "finished"
         splashOverlay.postDelayed({ hideSplash() }, 12000)
+
+        // Setup download listener
+        setupDownloadListener()
 
         requestInitialPermissions()
         configureWebView()
@@ -148,18 +127,35 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
+    private fun setupDownloadListener() {
+        webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+            val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
+            val request = DownloadManager.Request(Uri.parse(url))
+                .setMimeType(mimeType)
+                .addRequestHeader("User-Agent", userAgent)
+                .setDescription("Downloading file...")
+                .setTitle(fileName)
+                .allowScanningByMediaScanner()
+                .setVisibleInDownloadsUi(true)
+                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
+            
+            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+            dm.enqueue(request)
+        }
+    }
+
     private fun requestInitialPermissions() {
         val perms = mutableListOf(
             Manifest.permission.CAMERA,
             Manifest.permission.RECORD_AUDIO,
             Manifest.permission.ACCESS_FINE_LOCATION,
-            Manifest.permission.ACCESS_COARSE_LOCATION
+            Manifest.permission.ACCESS_COARSE_LOCATION,
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
         )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             perms.add(Manifest.permission.READ_MEDIA_IMAGES)
             perms.add(Manifest.permission.READ_MEDIA_VIDEO)
-        } else {
-            perms.add(Manifest.permission.READ_EXTERNAL_STORAGE)
         }
         val toRequest = perms.filter { !hasPermission(it) }
         if (toRequest.isNotEmpty()) {
