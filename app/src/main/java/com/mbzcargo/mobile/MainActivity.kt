@@ -136,7 +136,6 @@ class MainActivity : AppCompatActivity() {
                 .setDescription("Downloading file...")
                 .setTitle(fileName)
                 .allowScanningByMediaScanner()
-                .setVisibleInDownloadsUi(true)
                 .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
             
             val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
