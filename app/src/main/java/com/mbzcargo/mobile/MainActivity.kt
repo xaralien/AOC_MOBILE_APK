@@ -139,8 +139,10 @@ class MainActivity : AppCompatActivity() {
                 request.setDescription("Downloading file...")
                 request.setTitle(fileName)
                 request.allowScanningByMediaScanner()
-                request.setDestinationInExternalFilesDir(
-                    this@MainActivity,
+                request.setNotificationVisibility(
+                    DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED
+                )
+                request.setDestinationInExternalPublicDir(
                     Environment.DIRECTORY_DOWNLOADS,
                     fileName
                 )
