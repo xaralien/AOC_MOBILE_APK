@@ -138,9 +138,12 @@ class MainActivity : AppCompatActivity() {
                     .setTitle(fileName)
                     .allowScanningByMediaScanner()
                 
-                // Set destination folder
-                val downloadDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
-                request.setDestinationUri(Uri.fromFile(downloadDir))
+                // Download ke app-specific external files directory (kompatibel dengan semua versi)
+                request.setDestinationInExternalFilesDir(
+                    this@MainActivity,
+                    Environment.DIRECTORY_DOWNLOADS,
+                    fileName
+                )
                 
                 val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
                 dm.enqueue(request)
