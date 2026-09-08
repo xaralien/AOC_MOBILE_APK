@@ -129,17 +129,26 @@ class MainActivity : AppCompatActivity() {
 
     private fun setupDownloadListener() {
         webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
-            val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
-            val request = DownloadManager.Request(Uri.parse(url))
-                .setMimeType(mimeType)
-                .addRequestHeader("User-Agent", userAgent)
-                .setDescription("Downloading file...")
-                .setTitle(fileName)
-                .allowScanningByMediaScanner()
-                .setDestinationInExternalPublicDir(Environment.DIRECTORY_DOWNLOADS, fileName)
-            
-            val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
-            dm.enqueue(request)
+            try {
+                val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
+                val request = DownloadManager.Request(Uri.parse(url))
+                    .setMimeType(mimeType)
+                    .addRequestHeader("User-Agent", userAgent)
+                    .setDescription("Downloading file...")
+                    .setTitle(fileName)
+                    .allowScanningByMediaScanner()
+                
+                // Set destination folder
+                val downloadDir = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
+                request.setDestinationUri(Uri.fromFile(downloadDir))
+                
+                val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+                dm.enqueue(request)
+                
+                Toast.makeText(this@MainActivity, "Downloading: $fileName", Toast.LENGTH_SHORT).show()
+            } catch (e: Exception) {
+                Toast.makeText(this@MainActivity, "Download error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
         }
     }
 
