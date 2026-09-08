@@ -132,13 +132,13 @@ class MainActivity : AppCompatActivity() {
             try {
                 val fileName = URLUtil.guessFileName(url, contentDisposition, mimeType)
                 val request = DownloadManager.Request(Uri.parse(url))
-                    .setMimeType(mimeType)
-                    .addRequestHeader("User-Agent", userAgent)
-                    .setDescription("Downloading file...")
-                    .setTitle(fileName)
-                    .allowScanningByMediaScanner()
                 
-                // Download ke app-specific external files directory (kompatibel dengan semua versi)
+                // Call methods separately without chaining
+                request.setMimeType(mimeType)
+                request.addRequestHeader("User-Agent", userAgent)
+                request.setDescription("Downloading file...")
+                request.setTitle(fileName)
+                request.allowScanningByMediaScanner()
                 request.setDestinationInExternalFilesDir(
                     this@MainActivity,
                     Environment.DIRECTORY_DOWNLOADS,
