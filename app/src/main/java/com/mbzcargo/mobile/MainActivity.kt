@@ -30,6 +30,12 @@ import java.io.File
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
+import android.app.DownloadManager
+import android.content.Context
+import android.net.Uri
+import android.os.Environment
+import android.webkit.DownloadListener
+import android.webkit.WebView
 
 class MainActivity : AppCompatActivity() {
 
@@ -85,9 +91,32 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         // Switch from the launch (splash) theme to the normal app theme
         setTheme(R.style.Theme_MbzApp)
-        super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
+    super.onCreate(savedInstanceState)
+    setContentView(R.layout.activity_main)
 
+    webView = findViewById(R.id.webView)  // ← Inisialisasi DULUAN
+    progressBar = findViewById(R.id.progressBar)
+    swipeRefresh = findViewById(R.id.swipeRefresh)
+    splashOverlay = findViewById(R.id.splashOverlay)
+
+    // ← SETUP DOWNLOAD LISTENER SETELAH WEBVIEW INIT
+    webView.setDownloadListener { url, userAgent, contentDisposition, mimeType, _ ->
+        val request = DownloadManager.Request(Uri.parse(url))
+            .setMimeType(mimeType)
+            .addRequestHeader("User-Agent", userAgent)
+            .setDescription("Downloading file...")
+            .setTitle(URLUtil.guessFileName(url, contentDisposition, mimeType))
+            .allowScanningByMediaScanner()
+            .setNotificationVisibility(DownloadManager.Request.VISIBILITY_VISIBLE_NOTIFY_COMPLETED)
+            .setDestinationInExternalPublicDir(
+                Environment.DIRECTORY_DOWNLOADS,
+                URLUtil.guessFileName(url, contentDisposition, mimeType)
+            )
+        
+        val dm = getSystemService(Context.DOWNLOAD_SERVICE) as DownloadManager
+        dm.enqueue(request)
+    }
+        
         webView = findViewById(R.id.webView)
         progressBar = findViewById(R.id.progressBar)
         swipeRefresh = findViewById(R.id.swipeRefresh)
