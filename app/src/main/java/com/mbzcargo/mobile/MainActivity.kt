@@ -36,6 +36,7 @@ import android.net.Uri
 import android.os.Environment
 import android.webkit.DownloadListener
 import android.webkit.WebView
+import android.webkit.URLUtil
 
 class MainActivity : AppCompatActivity() {
 
